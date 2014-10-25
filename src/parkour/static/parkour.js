@@ -1,11 +1,18 @@
 var switchtime = new Date()
+var driver = null
 
 function showTime() {
     var elapsed = (new Date() - switchtime + 100) / 1000 | 0;
-    document.getElementById('currenttime').innerHTML = 
-	"Arbetad tid: " + timeString(elapsed) +
-	"  Tid kvar till byte: " + timeString(15*60 - elapsed);
+    var msg;
+    if (driver) {
+	msg = "Arbetad tid: " + timeString(elapsed) +
+	    "  Tid kvar till byte: " + timeString(15*60 - elapsed);
+    } else {
+	msg = "Pause sedan " + timeString(elapsed);
+    }
+    document.getElementById('currenttime').innerHTML = msg
 }
+
 function timeString(elapsed) {
     var t = "";
     if (elapsed > 60) {
@@ -17,17 +24,30 @@ function timeString(elapsed) {
 }
 
 function switchDriver(foo) {
-    console.log("Driver is now ... " + foo.target.value);
-    switchtime = new Date();
-    showTime();
+    if (driver != foo.target.value) {
+	driver = foo.target.value;
+	console.log("Driver is now ", driver);
+	switchtime = new Date();
+	var req = new XMLHttpRequest();
+	req.open('PUT', 'driver');
+	req.send(driver);
+	showTime();
+    }
     return false;
 }
 function pause() {
     console.log("Pause");
-    switchtime = new Date();
-    driver = null;
+    if (driver) {
+	switchtime = new Date();
+	driver = null;
+	var req = new XMLHttpRequest();
+	req.open('PUT', 'pause');
+	req.send();
+	showTime();
+    }
     return false;
 }
+
 
 document.getElementsByTagName('button')[0].onclick = switchDriver
 document.getElementsByTagName('button')[1].onclick = pause

@@ -4,6 +4,9 @@ import (
     "github.com/gocraft/web"
     "html/template"
     "net/http"
+    "fmt"
+    "bufio"
+    "io"
 )
 
 type Context struct {
@@ -20,12 +23,31 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
     })
 }
 
+func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
+    body := bufio.NewReader(req.Body)
+    name, err := body.ReadString(0)
+    if (err == nil || err == io.EOF) && (name != "") {
+        fmt.Println("Change driver to", name) // Should actually write db log
+        rw.WriteHeader(200)
+    } else {
+        fmt.Println("Error: ", err, "after", name)
+        rw.WriteHeader(400)
+    }
+}
+
+func (c *Context) Pause(rw web.ResponseWriter, req *web.Request) {
+    fmt.Println("Pause") // Should actually write db log
+    rw.WriteHeader(200)
+}
+
 func main() {
     router := web.New(Context{}).
         Middleware(web.LoggerMiddleware).
         Middleware(web.ShowErrorsMiddleware).
-        Get("/", (*Context).MainPage)
-
+        Get("/", (*Context).MainPage).
+        Put("/driver", (*Context).ChangeDriver).
+        Put("/pause", (*Context).Pause)
+    
     router.Subrouter(Context{}, "/static").
         Middleware(web.StaticMiddleware("src/parkour")).
         Get("/style.css", (*Context).MainPage).

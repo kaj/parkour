@@ -2,29 +2,33 @@ package main
 
 import (
     "github.com/gocraft/web"
-    "fmt"
+    "html/template"
     "net/http"
-    "strings"
 )
 
 type Context struct {
     HelloCount int
 }
 
-func (c *Context) SetHelloCount(rw web.ResponseWriter, req *web.Request, next web.NextMiddlewareFunc) {
-    c.HelloCount = 3
-    next(rw, req)
-}
-
-func (c *Context) SayHello(rw web.ResponseWriter, req *web.Request) {
-    fmt.Fprint(rw, strings.Repeat("Hello ", c.HelloCount), "World!")
+func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
+    tpl := template.Must(template.ParseFiles("src/parkour/templates/mainpage.html"))
+    tpl.Execute(rw, map[string]interface{}{
+        "kurs": "FG4711 Irrlära 8 hp",
+        "lab": "Lab 1 - go write some code",
+        "me": "Rasmus",
+        "other": "Marcus",
+    })
 }
 
 func main() {
-    router := web.New(Context{}).                   // Create your router
-        Middleware(web.LoggerMiddleware).           // Use some included middleware
-        Middleware(web.ShowErrorsMiddleware).       // ...
-        Middleware((*Context).SetHelloCount).       // Your own middleware!
-        Get("/", (*Context).SayHello)               // Add a route
-    http.ListenAndServe("localhost:3000", router)   // Start the server!
+    router := web.New(Context{}).
+        Middleware(web.LoggerMiddleware).
+        Middleware(web.ShowErrorsMiddleware).
+        Get("/", (*Context).MainPage)
+
+    router.Subrouter(Context{}, "/static").
+        Middleware(web.StaticMiddleware("src/parkour")).
+        Get("/parkour.js", (*Context).MainPage)
+
+    http.ListenAndServe("localhost:3000", router)
 }

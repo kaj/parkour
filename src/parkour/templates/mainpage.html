@@ -1,0 +1,18 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <title>Parkour</title>
+  </head>
+  <body>
+    <h1>Aktuell kurs: {{.kurs}}</h1>
+    <h2>Aktuell laboration: {{.lab}}</h2>
+    <form>
+      <button name="driver" value="{{.me}}">{{.me}} är förare</button>
+      <button name="paus">Paus</button>
+      <button name="driver" value="{{.other}}">{{.other}} är förare</button>
+    </form>
+    <div id="currenttime"></div>
+    <div>Visa statistik (i ny flik)</div>
+  </body>
+  <script src="/static/parkour.js"></script>
+</html>

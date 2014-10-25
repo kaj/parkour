@@ -1,14 +1,20 @@
-var switchtime = new Date()
-var driver = null
+var switchtime = new Date();
+var driver = null;
+var targettime = 15 * 60;
 
 function showTime() {
     var elapsed = (new Date() - switchtime + 100) / 1000 | 0;
     var msg;
     if (driver) {
+	var remaining = targettime - elapsed;
+	if (remaining <= 0.1 * targettime) {
+	    document.getElementById('currenttime').className =
+		(remaining < 0) ? 'late' : 'soon';
+	}
 	msg = "Arbetad tid: " + timeString(elapsed) +
-	    "  Tid kvar till byte: " + timeString(15*60 - elapsed);
+	    "  Tid kvar till byte: " + timeString(remaining);
     } else {
-	msg = "Pause sedan " + timeString(elapsed);
+	msg = "Paus sedan " + timeString(elapsed);
     }
     document.getElementById('currenttime').innerHTML = msg
 }

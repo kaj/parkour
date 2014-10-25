@@ -22,3 +22,9 @@ button[name=driver] {
 form span {
     flex-grow: 1;
 }
+#currenttime.soon {
+    background: #ff8;
+}
+#currenttime.late {
+    background: #f88;
+}

@@ -28,6 +28,7 @@ func main() {
 
     router.Subrouter(Context{}, "/static").
         Middleware(web.StaticMiddleware("src/parkour")).
+        Get("/style.css", (*Context).MainPage).
         Get("/parkour.js", (*Context).MainPage)
 
     http.ListenAndServe("localhost:3000", router)

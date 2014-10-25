@@ -2,13 +2,16 @@
 <html lang="sv">
   <head>
     <title>Parkour</title>
+    <link rel="stylesheet" href="/static/style.css" />
   </head>
   <body>
     <h1>Aktuell kurs: {{.kurs}}</h1>
     <h2>Aktuell laboration: {{.lab}}</h2>
     <form>
       <button name="driver" value="{{.me}}">{{.me}} är förare</button>
+      <span></span>
       <button name="paus">Paus</button>
+      <span></span>
       <button name="driver" value="{{.other}}">{{.other}} är förare</button>
     </form>
     <div id="currenttime"></div>

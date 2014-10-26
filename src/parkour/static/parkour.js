@@ -31,29 +31,31 @@ function timeString(elapsed) {
 
 function switchDriver(foo) {
     if (driver != foo.target.value) {
-	driver = foo.target.value;
-	console.log("Driver is now ", driver);
-	switchtime = new Date();
+	resetDriver(foo.target.value);
 	var req = new XMLHttpRequest();
 	req.open('PUT', 'driver');
 	req.send(driver);
-	showTime();
-    }
-    return false;
-}
-function pause() {
-    console.log("Pause");
-    if (driver) {
-	switchtime = new Date();
-	driver = null;
-	var req = new XMLHttpRequest();
-	req.open('PUT', 'pause');
-	req.send();
-	showTime();
     }
     return false;
 }
 
+function pause() {
+    console.log("Pause");
+    if (driver) {
+	resetDriver(null);
+	var req = new XMLHttpRequest();
+	req.open('PUT', 'pause');
+	req.send();
+    }
+    return false;
+}
+
+function resetDriver(d) {
+    driver = d;
+    switchtime = new Date();
+    document.getElementById('currenttime').className = '';
+    showTime();
+}
 
 document.getElementsByTagName('button')[0].onclick = switchDriver
 document.getElementsByTagName('button')[1].onclick = pause

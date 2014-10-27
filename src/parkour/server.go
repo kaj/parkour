@@ -144,16 +144,18 @@ func main() {
     rand.Seed(time.Now().UTC().UnixNano())
     router := web.New(Context{}).
         Middleware(web.LoggerMiddleware).
-        Middleware(web.ShowErrorsMiddleware).
-        Middleware((*Context).KthSessionMiddleware).
-        Get("/", (*Context).MainPage).
-        Put("/driver", (*Context).ChangeDriver).
-        Put("/pause", (*Context).Pause)
+        Middleware(web.ShowErrorsMiddleware)
     
     router.Subrouter(Context{}, "/static").
         Middleware(web.StaticMiddleware("src/parkour")).
         Get("/style.css", (*Context).MainPage).
         Get("/parkour.js", (*Context).MainPage)
+
+    router.Subrouter(Context{}, "/").
+        Middleware((*Context).KthSessionMiddleware).
+        Get("/", (*Context).MainPage).
+        Put("/driver", (*Context).ChangeDriver).
+        Put("/pause", (*Context).Pause)
 
     http.ListenAndServe("localhost:3000", router)
 }

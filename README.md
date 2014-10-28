@@ -7,4 +7,5 @@ Install the dependencies:
 
 Run the server:
 
+    export GOPATH=`pwd`
     go run src/parkour/server.go

@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <title>Parkour: new bout</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/static/style.css" />
+  </head>
+  <body>
+    <form>
+      <select name="course">
+	<option/>
+	{{range $key, $name := .courses}}
+	<option value="{{$key}}">{{$name}}</option>
+	{{end}}
+      </select>
+
+      <select name="lab">
+	<option/>
+	{{range $key, $name := .labs}}
+	<option value="{{$key}}">{{$name}}</option>
+	{{end}}
+      </select>
+
+      <input name="with"/>
+
+      <input type="submit" value="Start"/>
+    </form>
+  </body>
+</html>

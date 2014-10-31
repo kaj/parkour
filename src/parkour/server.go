@@ -23,14 +23,17 @@ type Context struct {
 }
 
 var courses = map[string]string{
-    "adk": "Algoritmer, Datastrukturer, Komplexitet",
+    "aaaa":  "Obefintlig testkurs",
+    "adk":   "Algoritmer, Datastrukturer, Komplexitet",
+    "cprog": "Programkonstruktion i C++",
     "prgcl": "Programmeringsteknik för Civilingenjör & Lärare",
-    "prgs": "Programmeringsteknik för S",
+    "prgs":  "Programmeringsteknik för S",
 }
 var labs = map[string]string{
     "lab1": "Lab 1",
     "lab2": "Lab 2",
     "lab3": "Lab 3",
+    "lab4": "Lab 4",
 }
 
 type Session struct {

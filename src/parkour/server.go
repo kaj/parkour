@@ -14,6 +14,11 @@ import (
     "time"
 )
 
+// Select a login server!
+// const LOGINSERVER = "MOCK" // offline development
+const LOGINSERVER = "https://login-r.referens.sys.kth.se/" // online dev
+// const LOGINSERVER = "https://login.kth.se/" // production
+
 type User struct {
     userid string
 }
@@ -133,10 +138,26 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
     fmt.Println("Cookie", session, err, " -> session", c.session)
     if c.session == nil {
         ticket := r.URL.Query().Get("ticket")
-        if ticket == "" {
+        if LOGINSERVER == "MOCK" {
+            c.session = new(Session)
+            c.session.user.userid = "u1famwov"
+            var oldkey string
+            if session != nil { oldkey = session.Value } else { oldkey = "" }
+            session = new (http.Cookie)
+            session.Name = "PARSESS"
+            session.Path = "/"
+            session.Domain = "localhost"
+            session.Value = makeSession(c.session, oldkey)
+            session.MaxAge = 3600
+            fmt.Println("Setting cookie", session, "and redirect to hide ticket")
+            http.SetCookie(rw, session)
+            http.Redirect(rw, r.Request, "http://localhost:3000" + r.URL.Path, http.StatusFound)
+            return; // early
+
+        } else if ticket == "" {
             v := url.Values{}
             v.Set("service", "http://localhost:3000" + r.URL.Path);
-            target := "http://login-r.referens.sys.kth.se/login?" + v.Encode()
+            target := LOGINSERVER + "login?" + v.Encode()
             fmt.Println("Redirecting to", target, "for login");
             http.Redirect(rw, r.Request, target, http.StatusFound)
             return // Early!
@@ -146,7 +167,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             v := url.Values{}
             v.Set("ticket", ticket)
             v.Set("service", "http://localhost:3000" + r.URL.Path);
-            validator := "http://login-r.referens.sys.kth.se/serviceValidate?" + v.Encode()
+            validator := LOGINSERVER + "serviceValidate?" + v.Encode()
             client := new(http.Client)
             res, err := client.Get(validator)
             if err != nil {

@@ -17,7 +17,8 @@ import (
 )
 
 // Select base URL for server
-const SERVERURL = "http://parkour.csc.kth.se"
+const SERVERHOST = "parkour.csc.kth.se"
+const SERVERURL = "http://" + SERVERHOST
 //const SERVERURL = "http://localhost:3000"
 
 // Select a login server!
@@ -230,7 +231,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session = new (http.Cookie)
             session.Name = "PARSESS"
             session.Path = "/"
-            // session.Domain = "localhost" -- hope it defaults sanely?
+            session.Domain = SERVERHOST
             session.Value = makeSession(c.session, oldkey)
             session.MaxAge = 3600
             fmt.Println("Setting cookie", session, "and redirect to hide ticket")

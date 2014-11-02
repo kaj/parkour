@@ -22,8 +22,8 @@ const SERVERURL = "http://parkour.csc.kth.se"
 
 // Select a login server!
 // const LOGINSERVER = "MOCK" // offline development
-const LOGINSERVER = "https://login-r.referens.sys.kth.se/" // online dev
-// const LOGINSERVER = "https://login.kth.se/" // production
+// const LOGINSERVER = "https://login-r.referens.sys.kth.se/" // online dev
+const LOGINSERVER = "https://login.kth.se/" // production
 
 var (
 	mgo_session *mgo.Session

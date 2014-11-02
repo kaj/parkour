@@ -2,6 +2,7 @@ Parkour
 
 Install the dependencies:
 
+    export GOPATH=`pwd`
     go get github.com/gocraft/web
     go get github.com/clbanning/mxj
     go get gopkg.in/mgo.v2/bson

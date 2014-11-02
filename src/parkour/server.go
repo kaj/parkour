@@ -19,6 +19,7 @@ import (
 // Select base URL for server
 const SERVERHOST = "parkour.csc.kth.se"
 const SERVERURL = "http://" + SERVERHOST
+//const SERVERHOST = "localhost"
 //const SERVERURL = "http://localhost:3000"
 
 // Select a login server!
@@ -47,7 +48,7 @@ type LogEntry struct {
 }
 
 type User struct {
-    userid string
+    Userid string
 }
 
 type Context struct {
@@ -69,8 +70,9 @@ var labs = map[string]string{
 }
 
 type Session struct {
-    user User
-    bout bson.ObjectId
+    Key string
+    User User
+    Bout *bson.ObjectId
 }
 
 func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
@@ -84,7 +86,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
         defer mgo_conn.Close()
         bout := new(Bout)
         bout.Id = bson.NewObjectId()
-        bout.User = c.session.user.userid
+        bout.User = c.session.User.Userid
         bout.Course = course
         bout.Lab = lab
         bout.Other = with
@@ -94,14 +96,14 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
             panic(err);
         }
         fmt.Println("Inserted", bout.Id)
-        c.session.bout = bout.Id
+        c.session.Bout = &bout.Id
 
         http.Redirect(rw, req.Request, SERVERURL + "/bout", http.StatusFound)
         return
     }
     tpl := template.Must(template.ParseFiles("src/parkour/templates/newbout.html"))
     tpl.Execute(rw, map[string]interface{}{
-        "user": c.session.user,
+        "User": c.session.User,
         "courses": courses,
         "labs": labs,
     })
@@ -110,7 +112,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
 func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
     tpl := template.Must(template.ParseFiles("src/parkour/templates/mainpage.html"))
 
-    bout := getBout(c.session.bout)
+    bout := getBout(c.session.Bout)
     if bout == nil {
         http.Redirect(rw, req.Request, SERVERURL + "/", http.StatusFound)
         return
@@ -118,17 +120,17 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
     tpl.Execute(rw, map[string]interface{}{
         "kurs": courses[bout.Course],
         "lab": labs[bout.Lab],
-        "me": string(bout.User), // TODO Get real name
+        "me": string(c.session.User.Userid), // TODO Get real name
         "other": string(bout.Other),
     })
 }
 
-func getBout(id bson.ObjectId) *Bout {
+func getBout(id *bson.ObjectId) *Bout {
     fmt.Println("Try to work with bout", id)
     mgo_conn := mgo_session.Copy()
     defer mgo_conn.Close()
 
-    if !id.Valid() {
+    if id == nil || !id.Valid() {
         fmt.Println("Got bout nil")
         return nil
     }
@@ -150,8 +152,8 @@ func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
     body := bufio.NewReader(req.Body)
     name, err := body.ReadString(0)
     if (err == nil || err == io.EOF) && (name != "") {
-        fmt.Println("Change driver for", c.session.user, "to", name)
-        addLog(c.session.bout, name)
+        fmt.Println("Change driver for", c.session.User, "to", name)
+        addLog(*c.session.Bout, name)
         rw.WriteHeader(200)
     } else {
         fmt.Println("Error: ", err, "after", name)
@@ -160,8 +162,8 @@ func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
 }
 
 func (c *Context) Pause(rw web.ResponseWriter, req *web.Request) {
-    fmt.Println("Pause for", c.session.user)
-    addLog(c.session.bout, "pause")
+    fmt.Println("Pause for", c.session.User)
+    addLog(*c.session.Bout, "pause")
     rw.WriteHeader(200)
 }
 
@@ -183,16 +185,11 @@ func addLog(bout bson.ObjectId, name string) {
     }
 }
 
-var sessiondb map[string]*Session // TODO Store in actual db!
-
 var letters = []rune("ABCDEFGHIJKLMNOPQRSTUVWXYZ" +
     "abcdefghijklmnopqrstuvwxyz" +
     "0123456789")
 
 func makeSession(session *Session, key string) string {
-    if sessiondb == nil {
-        sessiondb = make(map[string]*Session)
-    }
     // Create a new session, store the user, return the session key
     if key == "" {
         keydata := make([]rune, 42)
@@ -200,17 +197,47 @@ func makeSession(session *Session, key string) string {
             keydata[i] = letters[rand.Intn(len(letters))]
         }
         key = string(keydata)
-    } else {
-        if sessiondb[key] != nil {
-            panic("Bad session reuse!")
-        }
+//    } else {
+//        if getSession(key) != nil {
+//            panic("Bad session reuse!")
+//        }
     }
-    sessiondb[key] = session
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    session.Key = key
+    err := mgo_conn.DB(DB_name).C("sessions").Insert(session)
+    if err != nil {
+        panic(err);
+    }
     return key
 }
 
 func getSession(key string) *Session {
-    return sessiondb[key]
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    var result = new(Session)
+    err := mgo_conn.DB(DB_name).C("sessions").Find(bson.M{"key": key}).One(result)
+    if err == nil {
+        return result
+    } else if err == mgo.ErrNotFound {
+        return nil
+    } else {
+        panic(err)
+    }
+}
+
+func saveSession(session *Session) {
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+    fmt.Println("Trying to save session", session.Key, ":", session)
+    _, err := mgo_conn.DB(DB_name).C("sessions").Upsert(
+        bson.M{"key": session.Key},
+        *session)
+    if err != nil {
+        panic(err)
+    }
 }
 
 func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
@@ -221,11 +248,11 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
         c.session = getSession(session.Value)
     }
     fmt.Println("Cookie", session, err, " -> session", c.session)
-    if c.session == nil {
+    if c.session == nil || c.session.User.Userid == "" {
         ticket := r.URL.Query().Get("ticket")
         if LOGINSERVER == "MOCK" {
             c.session = new(Session)
-            c.session.user.userid = "u1famwov"
+            c.session.User.Userid = "u1famwov"
             var oldkey string
             if session != nil { oldkey = session.Value } else { oldkey = "" }
             session = new (http.Cookie)
@@ -273,9 +300,9 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             result := serv["authenticationSuccess"].(map[string]interface{})
             userid := result["user"].(string)
 
-            
+            fmt.Println("User is", userid)
             c.session = new(Session)
-            c.session.user.userid = userid
+            c.session.User.Userid = userid
             var oldkey string
             if session != nil { oldkey = session.Value } else { oldkey = "" }
             session = new (http.Cookie)
@@ -283,6 +310,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session.Path = "/"
             session.Domain = SERVERHOST
             session.Value = makeSession(c.session, oldkey)
+            fmt.Println("Session:", c.session)
             session.MaxAge = 3600
             fmt.Println("Setting cookie", session, "and redirect to hide ticket")
             http.SetCookie(rw, session)
@@ -293,8 +321,11 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
     fmt.Println("Write session cookie back", session)
     http.SetCookie(rw, session)
 
-    fmt.Println("User is", c.session.user)
+    fmt.Println("User is", c.session.User)
     next(rw, r)
+
+    fmt.Println("Store session to db", c.session)
+    saveSession(c.session)
 }
 
 func initdb() (*mgo.Session, string) {

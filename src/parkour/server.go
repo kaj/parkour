@@ -230,7 +230,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session = new (http.Cookie)
             session.Name = "PARSESS"
             session.Path = "/"
-            session.Domain = "localhost"
+            // session.Domain = "localhost" -- hope it defaults sanely?
             session.Value = makeSession(c.session, oldkey)
             session.MaxAge = 3600
             fmt.Println("Setting cookie", session, "and redirect to hide ticket")
@@ -250,7 +250,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             fmt.Println("Got ticket", ticket, "to validate")
             v := url.Values{}
             v.Set("ticket", ticket)
-            v.Set("service", "http://localhost:3000" + r.URL.Path);
+            v.Set("service", SERVERURL + r.URL.Path);
             validator := LOGINSERVER + "serviceValidate?" + v.Encode()
             client := new(http.Client)
             res, err := client.Get(validator)

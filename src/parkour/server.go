@@ -5,6 +5,8 @@ import (
     "fmt"
     "github.com/clbanning/mxj"
     "github.com/gocraft/web"
+    mgo "gopkg.in/mgo.v2"
+    "gopkg.in/mgo.v2/bson"
     "html/template"
     "io"
     "io/ioutil"
@@ -18,6 +20,26 @@ import (
 // const LOGINSERVER = "MOCK" // offline development
 const LOGINSERVER = "https://login-r.referens.sys.kth.se/" // online dev
 // const LOGINSERVER = "https://login.kth.se/" // production
+
+var (
+	mgo_session *mgo.Session
+	DB_name     string
+)
+
+// Collection entry for database
+type Bout struct {
+    Id bson.ObjectId `bson:"_id"`
+    User string
+    Other string
+    Course string
+    Lab string
+    Logs []LogEntry
+}
+
+type LogEntry struct {
+    Timestamp time.Time
+    Entry string // Enum? "self", "other", "pause"
+}
 
 type User struct {
     userid string
@@ -43,6 +65,7 @@ var labs = map[string]string{
 
 type Session struct {
     user User
+    bout bson.ObjectId
     course string
     lab string
     with string
@@ -58,6 +81,23 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
         c.session.course = course
         c.session.lab = lab
         c.session.with = with
+
+        mgo_conn := mgo_session.Copy()
+        defer mgo_conn.Close()
+        bout := new(Bout)
+        bout.Id = bson.NewObjectId()
+        bout.User = c.session.user.userid
+        bout.Course = course
+        bout.Lab = lab
+        bout.Other = with
+
+        err := mgo_conn.DB(DB_name).C("bouts").Insert(bout)
+        if err != nil {
+            panic(err);
+        }
+        fmt.Println("Inserted", bout.Id)
+        c.session.bout = bout.Id
+
         http.Redirect(rw, req.Request, "/bout", http.StatusFound)
         return
     }
@@ -83,8 +123,8 @@ func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
     body := bufio.NewReader(req.Body)
     name, err := body.ReadString(0)
     if (err == nil || err == io.EOF) && (name != "") {
-        // TODO Write to actual log in database!
         fmt.Println("Change driver for", c.session.user, "to", name)
+        addLog(c.session.bout, name)
         rw.WriteHeader(200)
     } else {
         fmt.Println("Error: ", err, "after", name)
@@ -93,9 +133,27 @@ func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
 }
 
 func (c *Context) Pause(rw web.ResponseWriter, req *web.Request) {
-    // TODO Write to actual log in database!
     fmt.Println("Pause for", c.session.user)
+    addLog(c.session.bout, "pause")
     rw.WriteHeader(200)
+}
+
+func addLog(bout bson.ObjectId, name string) {
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    log := new(LogEntry)
+    log.Timestamp = time.Now()
+    log.Entry = name
+    fmt.Printf("Add to log for %v: %v\n", bout, name)
+    err := mgo_conn.DB(DB_name).C("bouts").UpdateId(bout, bson.M{
+        "$push": bson.M{
+            "logs": log,
+        },
+    })
+    if err != nil {
+        panic(err)
+    }
 }
 
 var sessiondb map[string]*Session // TODO Store in actual db!
@@ -212,9 +270,18 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
     next(rw, r)
 }
 
+func initdb() (*mgo.Session, string) {
+    session, err := mgo.Dial("mongodb://localhost/parkour")
+    if err != nil {
+        panic(err)
+    }
+    return session, "parkour"
+}
 
 func main() {
     rand.Seed(time.Now().UTC().UnixNano())
+    mgo_session, DB_name = initdb()
+
     router := web.New(Context{}).
         Middleware(web.LoggerMiddleware).
         Middleware(web.ShowErrorsMiddleware)

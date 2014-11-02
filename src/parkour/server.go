@@ -66,9 +66,6 @@ var labs = map[string]string{
 type Session struct {
     user User
     bout bson.ObjectId
-    course string
-    lab string
-    with string
 }
 
 func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
@@ -78,10 +75,6 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
     fmt.Println("Got form", course, lab, with)
 
     if course != "" && lab != "" && with != "" {
-        c.session.course = course
-        c.session.lab = lab
-        c.session.with = with
-
         mgo_conn := mgo_session.Copy()
         defer mgo_conn.Close()
         bout := new(Bout)
@@ -111,12 +104,41 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
 
 func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
     tpl := template.Must(template.ParseFiles("src/parkour/templates/mainpage.html"))
+
+    bout := getBout(c.session.bout)
+    if bout == nil {
+        http.Redirect(rw, req.Request, "/", http.StatusFound)
+        return
+    }
     tpl.Execute(rw, map[string]interface{}{
-        "kurs": courses[c.session.course],
-        "lab": labs[c.session.lab],
-        "me": string(c.session.user.userid), // TODO Get real name
-        "other": string(c.session.with),
+        "kurs": courses[bout.Course],
+        "lab": labs[bout.Lab],
+        "me": string(bout.User), // TODO Get real name
+        "other": string(bout.Other),
     })
+}
+
+func getBout(id bson.ObjectId) *Bout {
+    fmt.Println("Try to work with bout", id)
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    if !id.Valid() {
+        fmt.Println("Got bout nil")
+        return nil
+    }
+    var result = new(Bout)
+    err := mgo_conn.DB(DB_name).C("bouts").FindId(id).One(result)
+    if err == nil {
+        fmt.Println("Got bout", result)
+        return result
+    } else if err == mgo.ErrNotFound {
+        fmt.Println("Not found, got nil")
+        return nil
+    } else {
+        fmt.Println("Panic", err)
+        panic(err)
+    }
 }
 
 func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {

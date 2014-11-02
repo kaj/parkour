@@ -16,6 +16,10 @@ import (
     "time"
 )
 
+// Select base URL for server
+const SERVERURL = "http://parkour.csc.kth.se"
+//const SERVERURL = "http://localhost:3000"
+
 // Select a login server!
 // const LOGINSERVER = "MOCK" // offline development
 const LOGINSERVER = "https://login-r.referens.sys.kth.se/" // online dev
@@ -91,7 +95,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
         fmt.Println("Inserted", bout.Id)
         c.session.bout = bout.Id
 
-        http.Redirect(rw, req.Request, "/bout", http.StatusFound)
+        http.Redirect(rw, req.Request, SERVERURL + "/bout", http.StatusFound)
         return
     }
     tpl := template.Must(template.ParseFiles("src/parkour/templates/newbout.html"))
@@ -107,7 +111,7 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 
     bout := getBout(c.session.bout)
     if bout == nil {
-        http.Redirect(rw, req.Request, "/", http.StatusFound)
+        http.Redirect(rw, req.Request, SERVERURL + "/", http.StatusFound)
         return
     }
     tpl.Execute(rw, map[string]interface{}{
@@ -231,12 +235,12 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session.MaxAge = 3600
             fmt.Println("Setting cookie", session, "and redirect to hide ticket")
             http.SetCookie(rw, session)
-            http.Redirect(rw, r.Request, "http://localhost:3000" + r.URL.Path, http.StatusFound)
+            http.Redirect(rw, r.Request, SERVERURL + r.URL.Path, http.StatusFound)
             return; // early
 
         } else if ticket == "" {
             v := url.Values{}
-            v.Set("service", "http://localhost:3000" + r.URL.Path);
+            v.Set("service", SERVERURL + r.URL.Path);
             target := LOGINSERVER + "login?" + v.Encode()
             fmt.Println("Redirecting to", target, "for login");
             http.Redirect(rw, r.Request, target, http.StatusFound)
@@ -281,7 +285,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session.MaxAge = 3600
             fmt.Println("Setting cookie", session, "and redirect to hide ticket")
             http.SetCookie(rw, session)
-            http.Redirect(rw, r.Request, "http://localhost:3000" + r.URL.Path, http.StatusFound)
+            http.Redirect(rw, r.Request, SERVERURL + r.URL.Path, http.StatusFound)
             return; // early
         }
     }

@@ -44,12 +44,17 @@ function pause() {
     console.log("Pause");
     if (driver) {
 	resetDriver(null);
-	var req = new XMLHttpRequest();
-	req.open('PUT', 'pause');
-	req.send();
+	putPause();
 	showCurrentLog()
     }
     return false;
+}
+
+function putPause() {
+    var req = new XMLHttpRequest();
+    req.open('PUT', 'pause', false);
+    req.send();
+    return true;
 }
 
 function resetDriver(d) {
@@ -90,6 +95,7 @@ function showCurrentLog() {
 document.getElementsByTagName('button')[0].onclick = switchDriver
 document.getElementsByTagName('button')[1].onclick = pause
 document.getElementsByTagName('button')[2].onclick = switchDriver
+document.getElementById("changebout").onclick = putPause
 
 setInterval(showTime, 1000)
 $("form#currentbout").after("<div id='currentlog'><h3>This pair programming session</h3><ul/></div>")

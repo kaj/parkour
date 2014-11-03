@@ -7,7 +7,8 @@
     <script src="//code.jquery.com/jquery-1.10.2.js"></script>
   </head>
   <body>
-    <p>Inloggad som {{.User.Name}}. <a href="/logout">Logga ut</a>.</p>
+    <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.
+      <a href="/" id="changebout">Change course / lab</a>.</p>
     <h1>Course: {{.kurs}}</h1>
     <h2>Current lab: {{.lab}}</h2>
     <form id="currentbout">

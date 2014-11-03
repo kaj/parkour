@@ -67,7 +67,7 @@ var courses = map[string]string{
     "adk":     "Algoritmer, Datastrukturer, Komplexitet",
     "cprog":   "Programkonstruktion i C++",
     "prgcl":   "Programmeringsteknik för Civilingenjör & Lärare",
-    "prgomed": "Programmeringsteknik för Media"
+    "prgomed": "Programmeringsteknik för Media",
     "prgs":    "Programmeringsteknik för S",
 }
 var labs = map[string]string{

@@ -61,20 +61,25 @@ function resetDriver(d) {
 
 function showCurrentLog() {
     $.getJSON("/boutlog", function(data) {
-	var items = [];
+	var items = [], lastpause = true;
 	$.each(data, function(key, val) {
 	    item = "<li>"
 	    if (val.Entry == "pause") {
-		item += "Pause"
+		item += "Pause";
+		lastpause = true;
 	    } else {
 		item += val.Entry;
 		if (val.Duration) {
 		    item += " was the driver for " + timeString(val.Duration);
 		}
+		lastpause = false;
 	    }
 	    items.unshift(item);
 	});
-	items[0] += " is the driver <span id='currenttime'/>"
+	if (!lastpause) {
+	    items[0] += " is the driver"
+	}
+	items[0] += " <span id='currenttime'/>"
 	$("#currentlog ul").replaceWith($( "<ul/>", {
 	    html: items.join( "" )
 	}))

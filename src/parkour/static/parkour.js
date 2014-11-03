@@ -69,12 +69,12 @@ function showCurrentLog() {
 	    } else {
 		item += val.Entry;
 		if (val.Duration) {
-		    item += " was driver for " + timeString(val.Duration);
+		    item += " was the driver for " + timeString(val.Duration);
 		}
 	    }
 	    items.unshift(item);
 	});
-	items[0] += " is driver <span id='currenttime'/>"
+	items[0] += " is the driver <span id='currenttime'/>"
 	$("#currentlog ul").replaceWith($( "<ul/>", {
 	    html: items.join( "" )
 	}))

@@ -80,13 +80,29 @@ type Session struct {
     Bout *bson.ObjectId
 }
 
+func findKthid(user string) string {
+    i := strings.Index(user, "(")
+    j := strings.Index(user, ")")
+    if i >= 0 && j > 0 {
+        fmt.Println("Got", user, "i:", i, "j:", j)
+        return user[i+1:j]
+    } else if len(user) == 8 {
+        return user
+    } else {
+        return ""
+    }
+}
+
 func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
     course := req.FormValue("course")
     lab := req.FormValue("lab")
     with := req.FormValue("with")
+    withkthid := findKthid(with)
     fmt.Println("Got form", course, lab, with)
 
-    if course != "" && lab != "" && with != "" {
+    if course != "" && lab != "" && withkthid != "" {
+        withuser := getUser(withkthid)
+
         mgo_conn := mgo_session.Copy()
         defer mgo_conn.Close()
         bout := new(Bout)
@@ -94,7 +110,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
         bout.User = c.session.User.Kthid
         bout.Course = course
         bout.Lab = lab
-        bout.Other = with
+        bout.Other = withuser.Kthid
 
         err := mgo_conn.DB(DB_name).C("bouts").Insert(bout)
         if err != nil {
@@ -126,7 +142,7 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
         "kurs": courses[bout.Course],
         "lab": labs[bout.Lab],
         "me": string(c.session.User.Firstname),
-        "other": string(bout.Other),
+        "other": string(getUser(bout.Other).Firstname),
     })
 }
 

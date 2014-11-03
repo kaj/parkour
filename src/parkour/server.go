@@ -15,6 +15,7 @@ import (
     "net/url"
     "os/exec"
     "regexp"
+    "strings"
     "time"
 )
 
@@ -186,6 +187,30 @@ func getUser(kthid string) User {
         return result
     }
 }
+
+func SuggestUser(rw web.ResponseWriter, req *web.Request) {
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    var results []bson.M
+    q := strings.Replace(req.FormValue("term"), " ", ".*", -1)
+    mgo_conn.DB(DB_name).C("users").
+        Find(bson.M{"name": bson.M{"$regex": q, "$options": "i"}}).
+        Limit(10).All(&results)
+
+    rw.Header().Set("Content-Type", "application/json")
+    rw.WriteHeader(200)
+    io.WriteString(rw, "[")
+    for i, obj := range results {
+        if i > 0 {
+            io.WriteString(rw, ", ")
+        }
+        io.WriteString(rw, "\"" + obj["name"].(string) +
+            " (" + obj["kthid"].(string) + ")\"")
+    }
+    io.WriteString(rw, "]\n")
+}
+
 
 func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
     body := bufio.NewReader(req.Body)
@@ -383,8 +408,9 @@ func main() {
 
     router := web.New(Context{}).
         Middleware(web.LoggerMiddleware).
-        Middleware(web.ShowErrorsMiddleware)
-    
+        Middleware(web.ShowErrorsMiddleware).
+        Get("/suggestuser", SuggestUser)
+
     router.Subrouter(Context{}, "/static").
         Middleware(web.StaticMiddleware("src/parkour")).
         Get("/style.css", (*Context).MainPage).

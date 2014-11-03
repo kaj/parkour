@@ -2,6 +2,7 @@ package main
 
 import (
     "bufio"
+    "encoding/json"
     "fmt"
     "github.com/clbanning/mxj"
     "github.com/gocraft/web"
@@ -48,6 +49,7 @@ type Bout struct {
 type LogEntry struct {
     Timestamp time.Time
     Entry string // Enum? "self", "other", "pause"
+    Duration int
 }
 
 type User struct {
@@ -247,6 +249,23 @@ func (c *Context) Pause(rw web.ResponseWriter, req *web.Request) {
     rw.WriteHeader(200)
 }
 
+func (c *Context) CurrentLog(rw web.ResponseWriter, req *web.Request) {
+    logs := getBout(c.session.Bout).Logs
+    for i := range logs {
+        if i > 0 && logs[i-1].Duration == 0 {
+            logs[i-1].Duration =
+                int(logs[i].Timestamp.Sub(logs[i-1].Timestamp).Seconds())
+        }
+    }
+    data, err := json.Marshal(logs)
+    if err != nil {
+        panic(err)
+    }
+    rw.Header().Set("Content-Type", "application/json")
+    rw.WriteHeader(200)
+    rw.Write(data)
+}
+
 func addLog(bout bson.ObjectId, name string) {
     mgo_conn := mgo_session.Copy()
     defer mgo_conn.Close()
@@ -436,6 +455,7 @@ func main() {
         Middleware((*Context).KthSessionMiddleware).
         Get("/", (*Context).NewBout).
         Get("/bout", (*Context).MainPage).
+        Get("/boutlog", (*Context).CurrentLog).
         Put("/driver", (*Context).ChangeDriver).
         Put("/pause", (*Context).Pause)
 

@@ -9,26 +9,30 @@
     <link rel="stylesheet" href="//code.jquery.com/ui/1.11.2/themes/smoothness/jquery-ui.css">
   </head>
   <body>
+    <h1>Parkour: Start new bout</h1>
     <form>
-      <select name="course">
+      <label for="course">Course:</label>
+      <select name="course" id="course">
 	<option/>
 	{{range $key, $name := .courses}}
 	<option value="{{$key}}">{{$name}}</option>
 	{{end}}
       </select>
 
-      <select name="lab">
+      <label for="lab">Lab:</label>
+      <select name="lab" id="lab">
 	<option/>
 	{{range $key, $name := .labs}}
 	<option value="{{$key}}">{{$name}}</option>
 	{{end}}
       </select>
 
-      <input class="username" name="with"/>
+      <label for="with">Colaborant:</label>
+      <input name="with" id="with"/>
 
       <input type="submit" value="Start"/>
       <script>
-	$('input.username').autocomplete({source: "/suggestuser"});
+	$('input#with').autocomplete({source: "/suggestuser"});
       </script>
     </form>
   </body>

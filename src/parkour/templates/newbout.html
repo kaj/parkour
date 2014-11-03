@@ -1,7 +1,7 @@
 <!doctype html>
 <html lang="sv">
   <head>
-    <title>Parkour: new bout</title>
+    <title>Parkour: Start new pair programming session</title>
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="/static/style.css" />
     <script src="//code.jquery.com/jquery-1.10.2.js"></script>
@@ -10,7 +10,7 @@
   </head>
   <body>
     <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.</p>
-    <h1>Parkour: Start new bout</h1>
+    <h1>Start new pair programming session</h1>
     <form>
       <label for="course">Course:</label>
       <select name="course" id="course">
@@ -36,5 +36,19 @@
 	$('input#with').autocomplete({source: "/suggestuser"});
       </script>
     </form>
+
+    <div class="help">
+      <h3>How to get started</h3>
+      <p>Log onto the system as one of the programmers in the
+      pair. Log out.</p>
+      <p>Log onto the system as the other programmer in the pair. Select
+      course, lab and enter your pair programming partners name in the
+      text field.</p>
+
+      <h3>How to stop pair programming</h3>
+      <p>Remember to click pause at the end of a pair programming
+      session, otherwise the system will keep logging over lunch, over
+      night or even over the weekend!</p>
+    </div>
   </body>
 </html>

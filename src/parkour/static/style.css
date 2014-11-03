@@ -31,3 +31,10 @@ form span {
 #currentlog {
     text-align: left;
 }
+div.help {
+    margin-top: 2em;
+    text-align: left;
+}
+h3:first-child {
+    margin-top: 0;
+}

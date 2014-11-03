@@ -86,7 +86,6 @@ func findKthid(user string) string {
     i := strings.Index(user, "(")
     j := strings.Index(user, ")")
     if i >= 0 && j > 0 {
-        fmt.Println("Got", user, "i:", i, "j:", j)
         return user[i+1:j]
     } else if len(user) == 8 {
         return user
@@ -100,7 +99,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
     lab := req.FormValue("lab")
     with := req.FormValue("with")
     withkthid := findKthid(with)
-    fmt.Println("Got form", course, lab, with)
+    // fmt.Println("Got form", course, lab, with)
 
     if course != "" && lab != "" && withkthid != "" {
         withuser := getUser(withkthid)
@@ -118,7 +117,6 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
         if err != nil {
             panic(err);
         }
-        fmt.Println("Inserted", bout.Id)
         c.session.Bout = &bout.Id
 
         http.Redirect(rw, req.Request, SERVERURL + "/bout", http.StatusFound)
@@ -149,24 +147,20 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 }
 
 func getBout(id *bson.ObjectId) *Bout {
-    fmt.Println("Try to work with bout", id)
+    // fmt.Println("Try to work with bout", id)
     mgo_conn := mgo_session.Copy()
     defer mgo_conn.Close()
 
     if id == nil || !id.Valid() {
-        fmt.Println("Got bout nil")
         return nil
     }
     var result = new(Bout)
     err := mgo_conn.DB(DB_name).C("bouts").FindId(id).One(result)
     if err == nil {
-        fmt.Println("Got bout", result)
         return result
     } else if err == mgo.ErrNotFound {
-        fmt.Println("Not found, got nil")
         return nil
     } else {
-        fmt.Println("Panic", err)
         panic(err)
     }
 }
@@ -234,7 +228,6 @@ func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
     body := bufio.NewReader(req.Body)
     name, err := body.ReadString(0)
     if (err == nil || err == io.EOF) && (name != "") {
-        fmt.Println("Change driver for", c.session.User, "to", name)
         addLog(*c.session.Bout, name)
         rw.WriteHeader(200)
     } else {
@@ -244,7 +237,6 @@ func (c *Context) ChangeDriver(rw web.ResponseWriter, req *web.Request) {
 }
 
 func (c *Context) Pause(rw web.ResponseWriter, req *web.Request) {
-    fmt.Println("Pause for", c.session.User)
     addLog(*c.session.Bout, "pause")
     rw.WriteHeader(200)
 }
@@ -273,7 +265,7 @@ func addLog(bout bson.ObjectId, name string) {
     log := new(LogEntry)
     log.Timestamp = time.Now()
     log.Entry = name
-    fmt.Printf("Add to log for %v: %v\n", bout, name)
+    // fmt.Printf("Add to log for %v: %v\n", bout, name)
     err := mgo_conn.DB(DB_name).C("bouts").UpdateId(bout, bson.M{
         "$push": bson.M{
             "logs": log,
@@ -330,7 +322,7 @@ func getSession(key string) *Session {
 func saveSession(session *Session) {
     mgo_conn := mgo_session.Copy()
     defer mgo_conn.Close()
-    fmt.Println("Trying to save session", session.Key, ":", session)
+    // fmt.Println("Trying to save session", session.Key, ":", session)
     _, err := mgo_conn.DB(DB_name).C("sessions").Upsert(
         bson.M{"key": session.Key},
         *session)
@@ -346,7 +338,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
     if (session != nil) && (err == nil) {
         c.session = getSession(session.Value)
     }
-    fmt.Println("Cookie", session, err, " -> session", c.session)
+    // fmt.Println("Cookie", session, err, " -> session", c.session)
     if c.session == nil || c.session.User.Kthid == "" {
         ticket := r.URL.Query().Get("ticket")
         if LOGINSERVER == "MOCK" {
@@ -371,12 +363,12 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             v := url.Values{}
             v.Set("service", SERVERURL + r.URL.Path);
             target := LOGINSERVER + "login?" + v.Encode()
-            fmt.Println("Redirecting to", target, "for login");
+            // fmt.Println("Redirecting to", target, "for login");
             http.Redirect(rw, r.Request, target, http.StatusFound)
             return // Early!
         } else {
             // Ok, there seem to be login
-            fmt.Println("Got ticket", ticket, "to validate")
+            // fmt.Println("Got ticket", ticket, "to validate")
             v := url.Values{}
             v.Set("ticket", ticket)
             v.Set("service", SERVERURL + r.URL.Path);
@@ -401,7 +393,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             result := serv["authenticationSuccess"].(map[string]interface{})
             userid := result["user"].(string)
 
-            fmt.Println("User is", userid)
+            // fmt.Println("User is", userid)
             c.session = new(Session)
             c.session.User = getUser(userid)
             var oldkey string
@@ -411,21 +403,20 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session.Path = "/"
             session.Domain = SERVERHOST
             session.Value = makeSession(c.session, oldkey)
-            fmt.Println("Session:", c.session)
+            // fmt.Println("Session:", c.session)
             session.MaxAge = 3600
-            fmt.Println("Setting cookie", session, "and redirect to hide ticket")
+            // fmt.Println("Setting cookie", session, "and redirect to hide ticket")
             http.SetCookie(rw, session)
             http.Redirect(rw, r.Request, SERVERURL + r.URL.Path, http.StatusFound)
             return; // early
         }
     }
-    fmt.Println("Write session cookie back", session)
+    // fmt.Println("Write session cookie back", session)
     http.SetCookie(rw, session)
 
-    fmt.Println("User is", c.session.User)
     next(rw, r)
 
-    fmt.Println("Store session to db", c.session)
+    // fmt.Println("Store session to db", c.session)
     saveSession(c.session)
 }
 

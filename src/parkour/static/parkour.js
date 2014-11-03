@@ -11,10 +11,10 @@ function showTime() {
 	    document.getElementById('currenttime').className =
 		(remaining < 0) ? 'late' : 'soon';
 	}
-	msg = "sedan " + timeString(elapsed) +
-	    "  Tid kvar till byte: " + timeString(remaining);
+	msg = "since " + timeString(elapsed) +
+	    "  Time left to change: " + timeString(remaining);
     } else {
-	msg = "sedan " + timeString(elapsed);
+	msg = "since " + timeString(elapsed);
     }
     document.getElementById('currenttime').innerHTML = msg
 }
@@ -23,10 +23,10 @@ function timeString(elapsed) {
     var t = "";
     if (elapsed > 60) {
 	var minutes = elapsed / 60 | 0
-	t = t + minutes + " minuter och ";
+	t = t + minutes + " minutes and ";
 	elapsed -= 60 * minutes;
     }
-    return t + elapsed + " sekunder."
+    return t + elapsed + " seconds."
 }
 
 function switchDriver(foo) {
@@ -63,13 +63,18 @@ function showCurrentLog() {
     $.getJSON("/boutlog", function(data) {
 	var items = [];
 	$.each(data, function(key, val) {
-	    if (val.Duration) {
-		items.unshift("<li>" + val.Entry + " " + timeString(val.Duration));
+	    item = "<li>"
+	    if (val.Entry == "pause") {
+		item += "Pause"
 	    } else {
-		items.unshift("<li>" + val.Entry);
+		item += val.Entry;
+		if (val.Duration) {
+		    item += " was driver for " + timeString(val.Duration);
+		}
 	    }
+	    items.unshift(item);
 	});
-	items[0] += " <span id='currenttime'/>"
+	items[0] += " is driver <span id='currenttime'/>"
 	$("#currentlog ul").replaceWith($( "<ul/>", {
 	    html: items.join( "" )
 	}))
@@ -82,5 +87,5 @@ document.getElementsByTagName('button')[1].onclick = pause
 document.getElementsByTagName('button')[2].onclick = switchDriver
 
 setInterval(showTime, 1000)
-$("form#currentbout").after("<div id='currentlog'><h3>This bout</h3><ul/></div>")
+$("form#currentbout").after("<div id='currentlog'><h3>This pair programming session</h3><ul/></div>")
 showCurrentLog()

@@ -13,6 +13,8 @@ import (
     "math/rand"
     "net/http"
     "net/url"
+    "os/exec"
+    "regexp"
     "time"
 )
 
@@ -48,7 +50,9 @@ type LogEntry struct {
 }
 
 type User struct {
-    Userid string
+    Kthid string
+    Firstname string
+    Name string
 }
 
 type Context struct {
@@ -86,7 +90,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
         defer mgo_conn.Close()
         bout := new(Bout)
         bout.Id = bson.NewObjectId()
-        bout.User = c.session.User.Userid
+        bout.User = c.session.User.Kthid
         bout.Course = course
         bout.Lab = lab
         bout.Other = with
@@ -120,7 +124,7 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
     tpl.Execute(rw, map[string]interface{}{
         "kurs": courses[bout.Course],
         "lab": labs[bout.Lab],
-        "me": string(c.session.User.Userid), // TODO Get real name
+        "me": string(c.session.User.Firstname),
         "other": string(bout.Other),
     })
 }
@@ -145,6 +149,41 @@ func getBout(id *bson.ObjectId) *Bout {
     } else {
         fmt.Println("Panic", err)
         panic(err)
+    }
+}
+
+func getUser(kthid string) User {
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    var result User
+    err := mgo_conn.DB(DB_name).C("users").Find(bson.M{"kthid": kthid}).One(&result)
+    if err == nil {
+        return result
+    } else {
+        // No such user!  Check with LDAP!
+		out, err := exec.Command("ldapsearch", "-x", "-LLL", "ugKthid="+kthid).Output()
+		if err != nil {
+			panic(err)
+		}
+		reg := regexp.MustCompile("(?m)^([^:]+): ([^\n]+)$")
+		matches := reg.FindAllStringSubmatch(string(out), -1)
+		matchmap := make(map[string]string)
+		for _, match := range matches {
+			key := match[1]
+			value := match[2]
+			matchmap[key] = value
+		}
+		// username := matchmap["uid"]
+        result.Kthid = kthid
+		result.Name = matchmap["cn"]
+		result.Firstname = matchmap["givenName"]
+
+        err = mgo_conn.DB(DB_name).C("users").Insert(result)
+        if err != nil {
+            panic(err)
+        }
+        return result
     }
 }
 
@@ -248,11 +287,13 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
         c.session = getSession(session.Value)
     }
     fmt.Println("Cookie", session, err, " -> session", c.session)
-    if c.session == nil || c.session.User.Userid == "" {
+    if c.session == nil || c.session.User.Kthid == "" {
         ticket := r.URL.Query().Get("ticket")
         if LOGINSERVER == "MOCK" {
             c.session = new(Session)
-            c.session.User.Userid = "u1famwov"
+            c.session.User.Kthid = "u1famwov"
+            c.session.User.Firstname = "Rasmus"
+            c.session.User.Name = "Rasmus Kaj"
             var oldkey string
             if session != nil { oldkey = session.Value } else { oldkey = "" }
             session = new (http.Cookie)
@@ -261,7 +302,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
             session.Domain = SERVERHOST
             session.Value = makeSession(c.session, oldkey)
             session.MaxAge = 3600
-            fmt.Println("Setting cookie", session, "and redirect to hide ticket")
+            // fmt.Println("Setting cookie", session, "and redirect to hide ticket")
             http.SetCookie(rw, session)
             http.Redirect(rw, r.Request, SERVERURL + r.URL.Path, http.StatusFound)
             return; // early
@@ -302,7 +343,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
 
             fmt.Println("User is", userid)
             c.session = new(Session)
-            c.session.User.Userid = userid
+            c.session.User = getUser(userid)
             var oldkey string
             if session != nil { oldkey = session.Value } else { oldkey = "" }
             session = new (http.Cookie)

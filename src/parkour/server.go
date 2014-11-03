@@ -139,6 +139,7 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
         return
     }
     tpl.Execute(rw, map[string]interface{}{
+        "User": c.session.User,
         "kurs": courses[bout.Course],
         "lab": labs[bout.Lab],
         "me": string(c.session.User.Firstname),
@@ -241,6 +242,23 @@ func (c *Context) Pause(rw web.ResponseWriter, req *web.Request) {
     rw.WriteHeader(200)
 }
 
+
+func (c *Context) Logout(rw web.ResponseWriter, req *web.Request) {
+    if c.session != nil {
+        bout := c.session.Bout
+        if bout != nil && bout.Valid() {
+            addLog(*bout, "pause")
+        }
+        mgo_conn := mgo_session.Copy()
+        defer mgo_conn.Close()
+
+        mgo_conn.DB(DB_name).C("sessions").Remove(bson.M{"key": c.session.Key})
+        c.session = nil
+    }
+    http.Redirect(rw, req.Request, LOGINSERVER + "logout", http.StatusFound)
+}
+
+
 func (c *Context) CurrentLog(rw web.ResponseWriter, req *web.Request) {
     logs := getBout(c.session.Bout).Logs
     for i := range logs {
@@ -322,6 +340,9 @@ func getSession(key string) *Session {
 }
 
 func saveSession(session *Session) {
+    if (session == nil) {
+        return
+    }
     mgo_conn := mgo_session.Copy()
     defer mgo_conn.Close()
     // fmt.Println("Trying to save session", session.Key, ":", session)
@@ -449,6 +470,7 @@ func main() {
         Get("/", (*Context).NewBout).
         Get("/bout", (*Context).MainPage).
         Get("/boutlog", (*Context).CurrentLog).
+        Get("/logout", (*Context).Logout).
         Put("/driver", (*Context).ChangeDriver).
         Put("/pause", (*Context).Pause)
 

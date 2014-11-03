@@ -297,9 +297,11 @@ func makeSession(session *Session, key string) string {
     defer mgo_conn.Close()
 
     session.Key = key
-    err := mgo_conn.DB(DB_name).C("sessions").Insert(session)
+    _, err := mgo_conn.DB(DB_name).C("sessions").Upsert(
+        bson.M{"key": session.Key},
+        *session)
     if err != nil {
-        panic(err);
+        panic(err)
     }
     return key
 }

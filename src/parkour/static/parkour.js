@@ -30,6 +30,7 @@ function timeString(elapsed) {
 }
 
 function switchDriver(foo) {
+    console.log("Set driver " + foo.target.value + " from " + driver)
     if (driver != foo.target.value) {
 	resetDriver(foo.target.value);
 	var req = new XMLHttpRequest();
@@ -41,7 +42,7 @@ function switchDriver(foo) {
 }
 
 function pause() {
-    console.log("Pause");
+    console.log("Pause from " + driver);
     if (driver) {
 	resetDriver(null);
 	putPause();
@@ -66,23 +67,27 @@ function resetDriver(d) {
 
 function showCurrentLog() {
     $.getJSON("/boutlog", function(data) {
-	var items = [], lastpause = true;
+	var items = [], last = "-";
 	$.each(data, function(key, val) {
 	    item = "<li>"
+	    last = val.Entry;
 	    if (val.Entry == "pause") {
 		item += "Pause";
-		lastpause = true;
 	    } else {
 		item += val.Entry;
 		if (val.Duration) {
 		    item += " was the driver for " + timeString(val.Duration);
 		}
-		lastpause = false;
 	    }
 	    items.unshift(item);
 	});
-	if (!lastpause) {
+	if (last == "-") {
+	    items.unshift("<li>New session");
+	} else if (last == "pause") {
+	    driver = null;
+	} else {
 	    items[0] += " is the driver"
+	    driver = last;
 	}
 	items[0] += " <span id='currenttime'/>"
 	$("#currentlog ul").replaceWith($( "<ul/>", {

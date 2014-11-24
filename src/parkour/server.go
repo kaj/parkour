@@ -115,8 +115,8 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 		"User":  c.session.User,
 		"kurs":  courses[bout.Course],
 		"lab":   labs[bout.Lab],
-		"me":    string(c.session.User.Firstname),
-		"other": string(GetUser(bout.Other).Firstname),
+		"me":    c.session.User,
+		"other": GetUser(bout.Other),
 	})
 }
 
@@ -253,7 +253,13 @@ func (c *Context) Logout(rw web.ResponseWriter, req *web.Request) {
 }
 
 func (c *Context) CurrentLog(rw web.ResponseWriter, req *web.Request) {
-	logs := getBout(c.session.Bout).GetLogs()
+    logs := getBout(c.session.Bout).GetLogs()
+    for i := range logs {
+        if logs[i].Entry != "pause" {
+            logs[i].Entry = GetUser(logs[i].Entry).Name
+        }
+    }
+
 	data, err := json.Marshal(logs)
 	if err != nil {
 		panic(err)

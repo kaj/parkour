@@ -75,7 +75,7 @@ func (c *Context) NewBout(rw web.ResponseWriter, req *web.Request) {
 	// fmt.Println("Got form", course, lab, with)
 
 	if course != "" && lab != "" && withkthid != "" {
-		withuser := getUser(withkthid)
+		withuser := GetUser(withkthid)
 
 		mgo_conn := mgo_session.Copy()
 		defer mgo_conn.Close()
@@ -116,7 +116,7 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 		"kurs":  courses[bout.Course],
 		"lab":   labs[bout.Lab],
 		"me":    string(c.session.User.Firstname),
-		"other": string(getUser(bout.Other).Firstname),
+		"other": string(GetUser(bout.Other).Firstname),
 	})
 }
 
@@ -161,7 +161,7 @@ func getBout(id *bson.ObjectId) *Bout {
 	}
 }
 
-func getUser(kthid string) User {
+func GetUser(kthid string) User {
 	mgo_conn := mgo_session.Copy()
 	defer mgo_conn.Close()
 
@@ -171,6 +171,7 @@ func getUser(kthid string) User {
 		return result
 	} else {
 		// No such user!  Check with LDAP!
+        // return User{kthid, kthid, kthid}
 		out, err := exec.Command("ldapsearch", "-x", "-LLL", "ugKthid="+kthid).Output()
 		if err != nil {
 			panic(err)
@@ -408,7 +409,7 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
 
 			// fmt.Println("User is", userid)
 			c.session = new(Session)
-			c.session.User = getUser(userid)
+			c.session.User = GetUser(userid)
 			var oldkey string
 			if session != nil {
 				oldkey = session.Value

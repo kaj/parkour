@@ -22,7 +22,7 @@ type LogEntry struct {
 }
 
 func (bout *Bout) With() User {
-    return getUser(bout.Other)
+    return GetUser(bout.Other)
 }
 
 func (bout *Bout) Starttime() string {

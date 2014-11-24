@@ -1,15 +1,9 @@
-package main
+package parkour
 
 import (
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
 )
-
-type User struct {
-	Kthid     string
-	Firstname string
-	Name      string
-}
 
 func upsertUser(users *mgo.Collection, kthid, givenname, name string) {
 	_, err := users.Upsert(bson.M{"kthid": kthid}, User{kthid, givenname, name})

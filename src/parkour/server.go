@@ -1,4 +1,4 @@
-package main
+package parkour
 
 import (
 	"bufio"
@@ -20,44 +20,10 @@ import (
 	"time"
 )
 
-// Select base URL for server
-const SERVERHOST = "parkour.csc.kth.se"
-const SERVERURL = "http://" + SERVERHOST
-
-//const SERVERHOST = "localhost"
-//const SERVERURL = "http://localhost:3000"
-
-// Select a login server!
-// const LOGINSERVER = "MOCK" // offline development
-// const LOGINSERVER = "https://login-r.referens.sys.kth.se/" // online dev
-const LOGINSERVER = "https://login.kth.se/" // production
-
 var (
 	mgo_session *mgo.Session
 	DB_name     string
 )
-
-// Collection entry for database
-type Bout struct {
-	Id     bson.ObjectId `bson:"_id"`
-	User   string
-	Other  string
-	Course string
-	Lab    string
-	Logs   []LogEntry
-}
-
-type LogEntry struct {
-	Timestamp time.Time
-	Entry     string // Enum? "self", "other", "pause"
-	Duration  int
-}
-
-type User struct {
-	Kthid     string
-	Firstname string
-	Name      string
-}
 
 type Context struct {
 	session *Session
@@ -154,46 +120,6 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 	})
 }
 
-func (bout *Bout) With() User {
-    return getUser(bout.Other)
-}
-
-func (bout *Bout) Starttime() string {
-    if len(bout.Logs) > 0 {
-        return bout.Logs[0].Timestamp.String()
-    } else {
-        return ""
-    }
-}
-
-func (bout *Bout) Duration() string {
-    logs := bout.Logs
-    if len(logs) > 0 {
-        return logs[len(logs)-1].Timestamp.Sub(logs[0].Timestamp).String()
-    } else {
-        return ""
-    }
-}
-
-func (bout *Bout) GetLogs() []LogEntry {
-    for i := range(bout.Logs) {
-        if i > 0 {
-            bout.Logs[i-1].Duration =
-                int(bout.Logs[i].Timestamp.Sub(bout.Logs[i-1].Timestamp).Seconds())
-        }
-    }
-    return bout.Logs
-}
-
-func (log *LogEntry) What(user User) string {
-    if log.Entry == "pause" {
-        return "Pause"
-    } else if log.Entry == user.Kthid {
-        return "Driver"
-    } else {
-        return "Navigator"
-    }
-}
 
 func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     tpl := template.Must(template.ParseFiles("src/parkour/templates/history.html"))
@@ -511,37 +437,12 @@ func (c *Context) KthSessionMiddleware(rw web.ResponseWriter, r *web.Request,
 	saveSession(c.session)
 }
 
-func initdb() (*mgo.Session, string) {
+func InitDb() {
 	session, err := mgo.Dial("mongodb://localhost/parkour")
 	if err != nil {
 		panic(err)
 	}
-	return session, "parkour"
+	mgo_session = session
+	DB_name = "parkour"
 }
 
-func main() {
-	rand.Seed(time.Now().UTC().UnixNano())
-	mgo_session, DB_name = initdb()
-
-	router := web.New(Context{}).
-		Middleware(web.LoggerMiddleware).
-		Middleware(web.ShowErrorsMiddleware).
-		Get("/suggestuser", SuggestUser)
-
-	router.Subrouter(Context{}, "/static").
-		Middleware(web.StaticMiddleware("src/parkour")).
-		Get("/style.css", (*Context).MainPage).
-		Get("/parkour.js", (*Context).MainPage)
-
-	router.Subrouter(Context{}, "/").
-		Middleware((*Context).KthSessionMiddleware).
-		Get("/", (*Context).NewBout).
-		Get("/bout", (*Context).MainPage).
-		Get("/history", (*Context).History).
-		Get("/boutlog", (*Context).CurrentLog).
-		Get("/logout", (*Context).Logout).
-		Put("/driver", (*Context).ChangeDriver).
-		Put("/pause", (*Context).Pause)
-
-	http.ListenAndServe("localhost:3000", router)
-}

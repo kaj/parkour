@@ -3,6 +3,7 @@ package parkour
 import (
 	"gopkg.in/mgo.v2/bson"
 	"time"
+    "fmt"
 )
 
 // Collection entry for database
@@ -25,9 +26,13 @@ func (bout *Bout) With() User {
     return GetUser(bout.Other)
 }
 
+func (bout *Bout) CourseLab() string {
+    return fmt.Sprintf("%s %s", courses[bout.Course], labs[bout.Lab])
+}
+
 func (bout *Bout) Starttime() string {
     if len(bout.Logs) > 0 {
-        return bout.Logs[0].Timestamp.String()
+        return bout.Logs[0].Timestamp.Format("2006-01-02 15:04")
     } else {
         return ""
     }

@@ -1,8 +1,7 @@
 package main
 
 import (
-	mgo "gopkg.in/mgo.v2"
-	"gopkg.in/mgo.v2/bson"
+    mgo "gopkg.in/mgo.v2"
     "fmt"
     "parkour"
 )
@@ -18,7 +17,7 @@ func main() {
 
     fmt.Println("Hello?")
     // TODO: Use non-empty logs as selector!
-    it := mgo_conn.DB("parkour").C("bouts").Find(bson.M{"user": "u1famwov"}).Iter()
+    it := mgo_conn.DB("parkour").C("bouts").Find(nil).Iter()
     var doc parkour.Bout
     for it.Next(&doc) {
         // fmt.Println("Document is", doc);

@@ -1,12 +1,13 @@
-package parkour
+package main
 
 import (
 	mgo "gopkg.in/mgo.v2"
 	"gopkg.in/mgo.v2/bson"
+	"parkour"
 )
 
 func upsertUser(users *mgo.Collection, kthid, givenname, name string) {
-	_, err := users.Upsert(bson.M{"kthid": kthid}, User{kthid, givenname, name})
+	_, err := users.Upsert(bson.M{"kthid": kthid}, parkour.User{kthid, givenname, name})
 	if err != nil {
 		panic(err)
 	}

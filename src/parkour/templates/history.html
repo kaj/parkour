@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <title>Parkour: History for {{.User.Firstname}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  </head>
+  <body>
+    <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.
+      <a href="/" id="changebout">Change course / lab</a>.</p>
+    <h1>History for {{.User.Firstname}}</h1>
+
+    {{range $bout := .bouts}}
+    <h3>With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
+    {{range $l := $bout.GetLogs}}
+    <p>{{$l.What $.User}} for {{$l.Duration}} seconds
+    {{end}}
+    {{end}}
+  </body>
+</html>

@@ -154,6 +154,68 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 	})
 }
 
+func (bout *Bout) With() User {
+    return getUser(bout.Other)
+}
+
+func (bout *Bout) Starttime() string {
+    if len(bout.Logs) > 0 {
+        return bout.Logs[0].Timestamp.String()
+    } else {
+        return ""
+    }
+}
+
+func (bout *Bout) Duration() string {
+    logs := bout.Logs
+    if len(logs) > 0 {
+        return logs[len(logs)-1].Timestamp.Sub(logs[0].Timestamp).String()
+    } else {
+        return ""
+    }
+}
+
+func (bout *Bout) GetLogs() []LogEntry {
+    for i := range(bout.Logs) {
+        if i > 0 {
+            bout.Logs[i-1].Duration =
+                int(bout.Logs[i].Timestamp.Sub(bout.Logs[i-1].Timestamp).Seconds())
+        }
+    }
+    return bout.Logs
+}
+
+func (log *LogEntry) What(user User) string {
+    if log.Entry == "pause" {
+        return "Pause"
+    } else if log.Entry == user.Kthid {
+        return "Driver"
+    } else {
+        return "Navigator"
+    }
+}
+
+func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
+    tpl := template.Must(template.ParseFiles("src/parkour/templates/history.html"))
+
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    var bouts []Bout
+    err := mgo_conn.DB(DB_name).C("bouts").Find(bson.M{"user": c.session.User.Kthid}).All(&bouts)
+    if err != nil {
+        panic(err)
+    }
+
+    foo := tpl.Execute(rw, map[string]interface{}{
+        "User": c.session.User,
+        "bouts": bouts,
+    })
+    if (foo != nil) {
+        fmt.Println("Foo?", foo);
+    }
+}
+
 func getBout(id *bson.ObjectId) *Bout {
 	// fmt.Println("Try to work with bout", id)
 	mgo_conn := mgo_session.Copy()
@@ -264,13 +326,7 @@ func (c *Context) Logout(rw web.ResponseWriter, req *web.Request) {
 }
 
 func (c *Context) CurrentLog(rw web.ResponseWriter, req *web.Request) {
-	logs := getBout(c.session.Bout).Logs
-	for i := range logs {
-		if i > 0 && logs[i-1].Duration == 0 {
-			logs[i-1].Duration =
-				int(logs[i].Timestamp.Sub(logs[i-1].Timestamp).Seconds())
-		}
-	}
+	logs := getBout(c.session.Bout).GetLogs()
 	data, err := json.Marshal(logs)
 	if err != nil {
 		panic(err)
@@ -481,6 +537,7 @@ func main() {
 		Middleware((*Context).KthSessionMiddleware).
 		Get("/", (*Context).NewBout).
 		Get("/bout", (*Context).MainPage).
+		Get("/history", (*Context).History).
 		Get("/boutlog", (*Context).CurrentLog).
 		Get("/logout", (*Context).Logout).
 		Put("/driver", (*Context).ChangeDriver).

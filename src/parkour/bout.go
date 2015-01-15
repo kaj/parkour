@@ -29,6 +29,9 @@ func (bout *Bout) With() User {
 func (bout *Bout) CourseLab() string {
     return fmt.Sprintf("%s %s", courses[bout.Course], labs[bout.Lab])
 }
+func (bout *Bout) LabName() string {
+    return labs[bout.Lab]
+}
 
 func (bout *Bout) Starttime() string {
     if len(bout.Logs) > 0 {

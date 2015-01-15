@@ -124,11 +124,21 @@ func (c *Context) MainPage(rw web.ResponseWriter, req *web.Request) {
 func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     tpl := template.Must(template.ParseFiles("src/parkour/templates/history.html"))
 
+    course := req.FormValue("course")
+    lab := req.FormValue("lab")
+
     mgo_conn := mgo_session.Copy()
     defer mgo_conn.Close()
 
     var bouts []Bout
-    err := mgo_conn.DB(DB_name).C("bouts").Find(bson.M{"user": c.session.User.Kthid}).All(&bouts)
+    filter := bson.M{
+        "user": c.session.User.Kthid
+        "course": course
+    }
+    if lab != "" {
+        filter["lab"] = lab
+    }
+    err := mgo_conn.DB(DB_name).C("bouts").Find(filter).All(&bouts)
     if err != nil {
         panic(err)
     }
@@ -136,6 +146,10 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     foo := tpl.Execute(rw, map[string]interface{}{
         "User": c.session.User,
         "bouts": bouts,
+        "courses": courses,
+        "course":  course,
+        "labs":    labs,
+        "lab":     lab,
     })
     if (foo != nil) {
         fmt.Println("Foo?", foo);

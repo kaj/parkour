@@ -11,8 +11,37 @@
       <a href="/" id="changebout">Change course / lab</a>.</p>
     <h1>History for {{.User.Firstname}}</h1>
 
+    <form action="/history" method="get">
+      <label for="course">Course:</label>
+      {{$list := .courses}}
+      {{$selected := .course}}
+      <select name="course" id="course">
+        <option/>
+        {{range $key, $name := $list}}
+        <option value="{{$key}}"{{if $key | eq $selected}} selected{{end}}>{{$name}}</option>
+        {{end}}
+      </select>
+
+      <label for="lab">Lab:</label>
+      {{$list := .labs}}
+      {{$selected := .lab}}
+      <select name="lab" id="lab">
+        <option/>
+        {{range $key, $name := $list}}
+        <option value="{{$key}}"{{if $key | eq $selected}} selected{{end}}>{{$name}}</option>
+        {{end}}
+      </select>
+
+      <!--
+      <label for="with">Collaborant:</label>
+      <input name="with" id="with"/>
+      -->
+
+      <input type="submit" value="Show"/>
+    </form>
+
     {{range $bout := .bouts}}
-    <h3>{{$bout.CourseLab}} With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
+    <h3>{{$bout.LabName}} With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
     {{range $l := $bout.GetLogs}}
     <p>{{$l.What $.User}} for {{$l.FormatDuration}}.
     {{end}}

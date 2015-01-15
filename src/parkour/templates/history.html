@@ -14,7 +14,7 @@
     {{range $bout := .bouts}}
     <h3>{{$bout.CourseLab}} With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
     {{range $l := $bout.GetLogs}}
-    <p>{{$l.What $.User}} for {{$l.Duration}} seconds
+    <p>{{$l.What $.User}} for {{$l.FormatDuration}}.
     {{end}}
     {{end}}
   </body>

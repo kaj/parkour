@@ -41,7 +41,7 @@ func (bout *Bout) Starttime() string {
 func (bout *Bout) Duration() string {
     logs := bout.Logs
     if len(logs) > 0 {
-        return logs[len(logs)-1].Timestamp.Sub(logs[0].Timestamp).String()
+        return formatSeconds(int(logs[len(logs)-1].Timestamp.Sub(logs[0].Timestamp).Seconds()))
     } else {
         return ""
     }
@@ -65,4 +65,15 @@ func (log *LogEntry) What(user User) string {
     } else {
         return "Navigator"
     }
+}
+
+func (log *LogEntry) FormatDuration() string {
+    return formatSeconds(log.Duration)
+}
+
+func formatSeconds(seconds int) string {
+    if seconds < 60 {
+        return fmt.Sprintf("%d seconds", seconds)
+    }
+    return fmt.Sprintf("%d minutes %d seconds", seconds/60, seconds%60)
 }

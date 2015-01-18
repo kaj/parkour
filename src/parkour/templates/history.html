@@ -40,8 +40,24 @@
       <input type="submit" value="Show"/>
     </form>
 
+    {{if .bouts}}
+    {{with .balance}}
+    <p>Total tidsfördelning: <span class="balance">
+      <span data-pct="{{.mypct}}">{{.mypct}}%</span>
+      <span data-pct="{{.otherspct}}">{{.otherspct}}%</span>
+    </span></p>
+    {{end}}
+    {{end}}
+
     {{range $bout := .bouts}}
     <h3>{{$bout.LabName}} With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
+    {{with $bout.DriverDurations}}
+    <p>Tidsfördelning: <span class="balance">
+      <span data-pct="{{.mypct}}">{{.mypct}}%</span>
+      <span data-pct="{{.otherspct}}">{{.otherspct}}%</span>
+    </span></p>
+    {{end}}
+    </script>
     {{range $l := $bout.GetLogs}}
     <p>{{$l.What $.User}} for {{$l.FormatDuration}}.
     {{end}}

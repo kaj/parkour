@@ -131,9 +131,9 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     defer mgo_conn.Close()
 
     var bouts []Bout
-    filter := bson.M{
-        "user": c.session.User.Kthid
-        "course": course
+    filter := bson.M {
+        "user": c.session.User.Kthid,
+        "course": course,
     }
     if lab != "" {
         filter["lab"] = lab
@@ -142,9 +142,26 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     if err != nil {
         panic(err)
     }
+    my, others := 0, 0
+    for _, bout := range bouts {
+        dd := bout.DriverDurations()
+        my += dd["my"]
+        others += dd["others"]
+    }
+    total := my + others
+    mypct := 50
+    if total > 0 {
+        mypct = 100 * my / total
+    }
+    balance := make(map[string]int)
+    balance["my"] = my
+    balance["mypct"] = mypct
+    balance["others"] = others
+    balance["otherspct"] = 100 - mypct
 
     foo := tpl.Execute(rw, map[string]interface{}{
         "User": c.session.User,
+        "balance": balance,
         "bouts": bouts,
         "courses": courses,
         "course":  course,

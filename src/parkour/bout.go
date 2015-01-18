@@ -60,6 +60,28 @@ func (bout *Bout) GetLogs() []LogEntry {
     return bout.Logs
 }
 
+func (bout *Bout) DriverDurations() map[string]int {
+    my, others := 0, 0
+    for _, log := range bout.GetLogs() {
+        if log.Entry == bout.User {
+            my += log.Duration
+        } else if log.Entry == bout.Other {
+            others += log.Duration
+        }
+    }
+    total := my + others
+    mypct := 50
+    if total > 0 {
+        mypct = 100 * my / total
+    }
+    result := make(map[string]int)
+    result["my"] = my
+    result["mypct"] = mypct
+    result["others"] = others
+    result["otherspct"] = 100 - mypct
+    return result
+}
+
 func (log *LogEntry) What(user User) string {
     if log.Entry == "pause" {
         return "Pause"

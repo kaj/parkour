@@ -143,22 +143,14 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
         panic(err)
     }
     my, others := 0, 0
+    othername := ""
     for _, bout := range bouts {
         dd := bout.DriverDurations()
-        my += dd["my"]
-        others += dd["others"]
+        my += dd.MySeconds
+        others += dd.OthersSeconds
+        othername = dd.OthersNames
     }
-    total := my + others
-    mypct := 50
-    if total > 0 {
-        mypct = 100 * my / total
-    }
-    balance := make(map[string]int)
-    balance["my"] = my
-    balance["mypct"] = mypct
-    balance["others"] = others
-    balance["otherspct"] = 100 - mypct
-
+    balance := &Balance{c.session.User.Kthid, my, othername, others}
     foo := tpl.Execute(rw, map[string]interface{}{
         "User": c.session.User,
         "balance": balance,
@@ -169,7 +161,7 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
         "lab":     lab,
     })
     if (foo != nil) {
-        fmt.Println("Foo?", foo);
+        fmt.Println("Template error:", foo);
     }
 }
 

@@ -60,7 +60,7 @@ func (bout *Bout) GetLogs() []LogEntry {
     return bout.Logs
 }
 
-func (bout *Bout) DriverDurations() map[string]int {
+func (bout *Bout) DriverDurations() *Balance {
     my, others := 0, 0
     for _, log := range bout.GetLogs() {
         if log.Entry == bout.User {
@@ -69,17 +69,7 @@ func (bout *Bout) DriverDurations() map[string]int {
             others += log.Duration
         }
     }
-    total := my + others
-    mypct := 50
-    if total > 0 {
-        mypct = 100 * my / total
-    }
-    result := make(map[string]int)
-    result["my"] = my
-    result["mypct"] = mypct
-    result["others"] = others
-    result["otherspct"] = 100 - mypct
-    return result
+    return &Balance{bout.User, my, bout.Other, others}
 }
 
 func (log *LogEntry) What(user User) string {

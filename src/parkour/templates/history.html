@@ -45,14 +45,14 @@
 
     {{if .bouts}}
     {{with .balance}}
-    <span id="balanceplot" style="float: right; max-width: 50%; width: 20em"></span>
-    <p>Total tidsfördelning: <span class="balance">
-      <span data-pct="{{.mypct}}">{{.mypct}}%</span>
-      <span data-pct="{{.otherspct}}">{{.otherspct}}%</span>
-    </span></p>
+    <span id="balanceplot" style="float: right; max-width: 50%; width: 30em"></span>
+    <p>Total tidsfördelning:
+      <span>{{.MyPct}}%</span>
+      <span>{{.OthersPct}}%</span>
+    </p>
     <script type="text/javascript">
       $(document).ready(function(){
-      var data = [ ['Me', {{.mypct}}],['Other', {{.otherspct}}] ];
+      var data = [ [{{.MyDescr}}, {{.MyPct}}],[{{.OthersDescr}}, {{.OthersPct}}] ];
       var plot1 = jQuery.jqplot ('balanceplot', [data], {
       seriesDefaults: {
         // Make this a pie chart.
@@ -73,10 +73,7 @@
     {{range $bout := .bouts}}
     <h3>{{$bout.LabName}} With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
     {{with $bout.DriverDurations}}
-    <p>Tidsfördelning: <span class="balance">
-      <span data-pct="{{.mypct}}">{{.mypct}}%</span>
-      <span data-pct="{{.otherspct}}">{{.otherspct}}%</span>
-    </span></p>
+    <p>Tidsfördelning: {{.MyDescr}} ({{.MyPct}}%) {{.OthersDescr}} ({{.OthersPct}}%)</p>
     {{end}}
     </script>
     {{range $l := $bout.GetLogs}}

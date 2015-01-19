@@ -33,11 +33,12 @@ var courses = map[string]string{
 	"aaaa":    "Obefintlig testkurs",
 	"adk":     "Algoritmer, Datastrukturer, Komplexitet",
 	"cprog":   "Programkonstruktion i C++",
+	"nump":    "Numeriska metoder och grundläggande programmering",
+	"oop":     "Objektorienterad programmering",
 	"prgcl":   "Programmeringsteknik för Civilingenjör & Lärare",
 	"prgomed": "Programmeringsteknik för Media",
 	"prgs":    "Programmeringsteknik för S",
 	"tilda":   "Tillämpad datalogi",
-	"nump":    "Numeriska metoder och grundläggande programmering",
 }
 var labs = map[string]string{
 	"labb1": "Labb 1",

@@ -20,7 +20,10 @@ func main() {
 	router.Subrouter(parkour.Context{}, "/static").
 		Middleware(web.StaticMiddleware("src/parkour")).
 		Get("/style.css", (*parkour.Context).MainPage).
-		Get("/parkour.js", (*parkour.Context).MainPage)
+		Get("/parkour.js", (*parkour.Context).MainPage).
+		Get("/jquery.jqplot.min.js", (*parkour.Context).MainPage).
+		Get("/jqplot.pieRenderer.min.js", (*parkour.Context).MainPage).
+		Get("/jquery.jqplot.min.css", (*parkour.Context).MainPage)
 
 	router.Subrouter(parkour.Context{}, "/").
 		Middleware((*parkour.Context).KthSessionMiddleware).

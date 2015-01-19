@@ -5,6 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1"/>
     <link rel="stylesheet" href="/static/style.css" />
     <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+    <script type="text/javascript" src="/static/jquery.jqplot.min.js"></script>
+    <script type="text/javascript" src="/static/jqplot.pieRenderer.min.js"></script>
+    <link rel="stylesheet" href="/static/jquery.jqplot.min.css" />
   </head>
   <body>
     <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.
@@ -42,10 +45,28 @@
 
     {{if .bouts}}
     {{with .balance}}
+    <span id="balanceplot" style="float: right; max-width: 50%; width: 20em"></span>
     <p>Total tidsfördelning: <span class="balance">
       <span data-pct="{{.mypct}}">{{.mypct}}%</span>
       <span data-pct="{{.otherspct}}">{{.otherspct}}%</span>
     </span></p>
+    <script type="text/javascript">
+      $(document).ready(function(){
+      var data = [ ['Me', {{.mypct}}],['Other', {{.otherspct}}] ];
+      var plot1 = jQuery.jqplot ('balanceplot', [data], {
+      seriesDefaults: {
+        // Make this a pie chart.
+        renderer: jQuery.jqplot.PieRenderer,
+        rendererOptions: {
+          // Put data labels on the pie slices.
+          // By default, labels show the percentage of the slice.
+          showDataLabels: true
+        }
+      },
+      legend: { show:true, location: 'e' }
+      });
+      });
+    </script>
     {{end}}
     {{end}}
 

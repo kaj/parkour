@@ -28,6 +28,14 @@ func (bout *Bout) With() User {
 func (bout *Bout) RealName1() string {
     return GetUser(bout.User).Name
 }
+func (bout *Bout) OtherUser(me User) User {
+    fmt.Println("In Othername;", me.Kthid, bout.User, bout.Other)
+    if me.Kthid == bout.User {
+        return GetUser(bout.Other)
+    } else {
+        return GetUser(bout.User)
+    }
+}
 
 func (bout *Bout) CourseLab() string {
     return fmt.Sprintf("%s %s", courses[bout.Course], labs[bout.Lab])
@@ -63,7 +71,7 @@ func (bout *Bout) GetLogs() []LogEntry {
     return bout.Logs
 }
 
-func (bout *Bout) DriverDurations() *Balance {
+func (bout *Bout) DriverDurations(prim User) *Balance {
     my, others := 0, 0
     for _, log := range bout.GetLogs() {
         if log.Entry == bout.User {
@@ -72,7 +80,11 @@ func (bout *Bout) DriverDurations() *Balance {
             others += log.Duration
         }
     }
-    return &Balance{bout.User, my, bout.Other, others}
+    if prim.Kthid == bout.User {
+        return &Balance{bout.User, my, bout.Other, others}
+    } else {
+        return &Balance{bout.Other, others, bout.User, my}
+    }
 }
 
 func (log *LogEntry) What(user User) string {
@@ -82,6 +94,13 @@ func (log *LogEntry) What(user User) string {
         return "Driver"
     } else {
         return "Navigator"
+    }
+}
+func (log *LogEntry) DriverName() string {
+    if log.Entry == "pause" {
+        return "Pause"
+    } else {
+        return GetUser(log.Entry).Firstname + " is driver"
     }
 }
 

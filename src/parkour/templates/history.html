@@ -9,7 +9,7 @@
     <script type="text/javascript" src="/static/jqplot.pieRenderer.min.js"></script>
     <link rel="stylesheet" href="/static/jquery.jqplot.min.css" />
   </head>
-  <body>
+  <body>{{ $me := .User }}
     <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.
       <a href="/bout">Current lab session</a>.
       <a href="/" id="changebout">Change course / lab</a>.
@@ -76,14 +76,14 @@
     {{end}}
 
     {{range $bout := .bouts}}
-    <h3>{{$bout.LabName}} With {{$bout.With.Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
-    {{with $bout.DriverDurations}}
+    <h3>{{$bout.LabName}} With {{($bout.OtherUser $me).Name}} at {{$bout.Starttime}} for {{$bout.Duration}}</h3>
+    {{with $bout.DriverDurations $me}}
     <p>Tidsfördelning: {{.MyDescr}} ({{.MyPct}}%) {{.OthersDescr}} ({{.OthersPct}}%)</p>
     {{end}}
     </script>
-    {{range $l := $bout.GetLogs}}
-    <p>{{$l.What $.User}} for {{$l.FormatDuration}}.
-    {{end}}
+    <ul>{{range $l := $bout.GetLogs}}
+    <li>{{$l.DriverName}} for {{$l.FormatDuration}}.
+    {{end}}</ul>
     {{end}}
   </body>
 </html>

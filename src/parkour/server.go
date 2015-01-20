@@ -131,7 +131,10 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
 
     var bouts []Bout
     filter := bson.M {
-        "user": c.session.User.Kthid,
+        "$or": [2]bson.M{
+            bson.M{"user": c.session.User.Kthid},
+            bson.M{"other": c.session.User.Kthid},
+        },
         "course": course,
     }
     if lab != "" {
@@ -144,7 +147,7 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     my, others := 0, 0
     othername := ""
     for _, bout := range bouts {
-        dd := bout.DriverDurations()
+        dd := bout.DriverDurations(c.session.User)
         my += dd.MySeconds
         others += dd.OthersSeconds
         othername = dd.OthersNames

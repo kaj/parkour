@@ -15,7 +15,7 @@
       <a href="/" id="changebout">Change course / lab</a>.</p>
     <h1>History for {{.User.Firstname}}</h1>
 
-    <form action="/history" method="get">
+    <form action="/history" class="row" method="get">
       <label for="course">Course:</label>
       {{$list := .courses}}
       {{$selected := .course}}

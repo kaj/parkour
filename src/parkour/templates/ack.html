@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="sv">
+  <head>
+    <title>Parkour: Check sessions for {{.User.Firstname}}</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <link rel="stylesheet" href="/static/style.css" />
+    <script src="//code.jquery.com/jquery-1.10.2.js"></script>
+  </head>
+  <body>
+    <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.
+      <a href="/bout">Current lab session</a>.
+      <a href="/" id="changebout">Change course / lab</a>.
+      <a href="/history">History</a>.</p>
+    <h1>Check sessions for {{.User.Firstname}}</h1>
+
+    <p>Listed here is all lab sessions where you are registered as the colaborant.</p>
+
+    <dl>
+      {{range $i, $bout := .bouts}}
+      <dt>{{$bout.LabName}} With {{$bout.RealName1}} at {{$bout.Starttime}} for {{$bout.Duration}}
+      {{with $bout.DriverDurations}}
+      <dd>Tidsfördelning: {{.MyDescr}} ({{.MyPct}}%) {{.OthersDescr}} ({{.OthersPct}}%)
+      {{end}}
+      {{end}}
+    </dl>
+
+    <p>If any of this is wrong, please contact
+    &lt;<a href="mailto:kaj@kth.se">kaj@kth.se</a>&gt;.</p>
+  </body>
+</html>

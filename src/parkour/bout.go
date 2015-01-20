@@ -25,6 +25,9 @@ type LogEntry struct {
 func (bout *Bout) With() User {
     return GetUser(bout.Other)
 }
+func (bout *Bout) RealName1() string {
+    return GetUser(bout.User).Name
+}
 
 func (bout *Bout) CourseLab() string {
     return fmt.Sprintf("%s %s", courses[bout.Course], labs[bout.Lab])

@@ -30,6 +30,7 @@ func main() {
 		Get("/", (*parkour.Context).NewBout).
 		Get("/bout", (*parkour.Context).MainPage).
 		Get("/history", (*parkour.Context).History).
+		Get("/ack", (*parkour.Context).Ack).
 		Get("/boutlog", (*parkour.Context).CurrentLog).
 		Get("/logout", (*parkour.Context).Logout).
 		Put("/driver", (*parkour.Context).ChangeDriver).

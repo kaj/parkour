@@ -12,7 +12,9 @@
   <body>
     <p>Logged in as {{.User.Name}}. <a href="/logout">Logout</a>.
       <a href="/bout">Current lab session</a>.
-      <a href="/" id="changebout">Change course / lab</a>.</p>
+      <a href="/" id="changebout">Change course / lab</a>.
+      <a href="/ack">Check sessions</a>.</p>
+
     <h1>History for {{.User.Firstname}}</h1>
 
     <form action="/history" class="row" method="get">

@@ -164,6 +164,29 @@ func (c *Context) History(rw web.ResponseWriter, req *web.Request) {
     }
 }
 
+func (c *Context) Ack(rw web.ResponseWriter, req *web.Request) {
+    tpl := template.Must(template.ParseFiles("src/parkour/templates/ack.html"))
+
+    mgo_conn := mgo_session.Copy()
+    defer mgo_conn.Close()
+
+    var bouts []Bout
+    filter := bson.M {
+        "other": c.session.User.Kthid,
+    }
+    err := mgo_conn.DB(DB_name).C("bouts").Find(filter).All(&bouts)
+    if err != nil {
+        panic(err)
+    }
+    foo := tpl.Execute(rw, map[string]interface{}{
+        "User": c.session.User,
+        "bouts": bouts,
+    })
+    if (foo != nil) {
+        fmt.Println("Template error:", foo);
+    }
+}
+
 func getBout(id *bson.ObjectId) *Bout {
 	// fmt.Println("Try to work with bout", id)
 	mgo_conn := mgo_session.Copy()
